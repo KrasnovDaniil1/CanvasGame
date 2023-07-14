@@ -1,100 +1,103 @@
 let canvas = document.getElementById("myCanvas");
 let ctx = canvas.getContext("2d");
-let ballRadius = 10;
-let x = canvas.width / 2;
-let y = canvas.height - 30;
-let dx = 2;
-let dy = -2;
-let paddleHeight = 10;
-let paddleWidth = 75;
-let paddleX = (canvas.width - paddleWidth) / 2;
-let rightPressed = false;
-let leftPressed = false;
 
-let brickRowCount = 3;
-let brickColumnCount = 5;
-let brickWidth = 75;
-let brickHeight = 20;
-let brickPadding = 10;
-let brickOffsetTop = 30;
-let brickOffsetLeft = 30;
+const platform = new Image();
+platform.src = "./platform.png";
+let platformWidth = 100;  
+let platformHeight = 20; 
+let platformX = canvas.width - platformWidth; 
+let platformY = canvas.height - platformHeight; 
+let platformSpeed = 10;
+
+const ball = new Image();
+ball.src = "./ball.png";
+let ballRadius = 50;
+let ballX = canvas.width / 2 - ballRadius;
+let ballY = canvas.height / 2 - ballRadius;
+let ballSpeed = 3;
+let ballMoveX = ballSpeed * 1.05;
+let ballMoveY = -ballSpeed * 1.05;
+let rightMove = false;
+let leftMove = false;
+
+const monster = new Image();
+monster.src = "./monster.png";
+let monsterHCount = 10;
+let monsterVCount = 3;
+let monsterPadding = 5;
+let monsterRadius = canvas.width / monsterHCount - monsterPadding;
+let monsters = [];
 
 let score = 0;
 
-let bricks = [];
+document.addEventListener("keydown", keyDownPlatform, false);
+document.addEventListener("keyup", keyUpPlatform, false);
 
-for (let c = 0; c < brickColumnCount; c++) {
-    bricks[c] = [];
-    for (let r = 0; r < brickRowCount; r++) {
-        bricks[c][r] = { x: 0, y: 0, status: 1 };
+for (let c = 0; c < monsterHCount; c++) {
+    monsters[c] = [];
+    for (let r = 0; r < monsterVCount; r++) {
+        monsters[c][r] = { x: 0, y: 0, status: true };
     }
 }
 
-document.addEventListener("keydown", keyDownHandler, false);
-document.addEventListener("keyup", keyUpHandler, false);
-
-function keyDownHandler(e) {
+function keyDownPlatform(e) {
     if (e.key == "Right" || e.key == "ArrowRight") {
-        rightPressed = true;
+        rightMove = true;
     } else if (e.key == "Left" || e.key == "ArrowLeft") {
-        leftPressed = true;
+        leftMove = true;
     }
 }
 
-function keyUpHandler(e) {
+function keyUpPlatform(e) {
     if (e.key == "Right" || e.key == "ArrowRight") {
-        rightPressed = false;
+        rightMove = false;
     } else if (e.key == "Left" || e.key == "ArrowLeft") {
-        leftPressed = false;
+        leftMove = false;
     }
+}
+
+function drawPlatform() {
+    ctx.drawImage(
+        platform,
+        platformX,
+        platformY,
+        platformWidth,
+        platformHeight
+    );
 }
 
 function drawBall() {
-    ctx.beginPath();
-    ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
-    ctx.fillStyle = "#0095DD";
-    ctx.fill();
-    ctx.closePath();
-}
-function drawPaddle() {
-    ctx.beginPath();
-    ctx.rect(paddleX, canvas.height - paddleHeight, paddleWidth, paddleHeight);
-    ctx.fillStyle = "#0095DD";
-    ctx.fill();
-    ctx.closePath();
+    ctx.drawImage(ball, ballX, ballY, ballRadius, ballRadius);
 }
 
-function drawBricks() {
-    for (let c = 0; c < brickColumnCount; c++) {
-        for (let r = 0; r < brickRowCount; r++) {
-            if (bricks[c][r].status == 1) {
-                let brickX = c * (brickWidth + brickPadding) + brickOffsetLeft;
-                let brickY = r * (brickHeight + brickPadding) + brickOffsetTop;
-                bricks[c][r].x = brickX;
-                bricks[c][r].y = brickY;
-                ctx.beginPath();
-                ctx.rect(brickX, brickY, brickWidth, brickHeight);
-                ctx.fillStyle = "#0095DD";
-                ctx.fill();
-                ctx.closePath();
+function drawMonsters() {
+    for (let c = 0; c < monsterHCount; c++) {
+        for (let r = 0; r < monsterVCount; r++) {
+            if (monsters[c][r].status == 1) {
+                let X = c * (monsterRadius + monsterPadding);
+                let Y = r * (monsterRadius + monsterPadding);
+                monsters[c][r].x = X;
+                monsters[c][r].y = Y;
+                ctx.drawImage(monster, X, Y, monsterRadius, monsterRadius);
             }
         }
     }
 }
 
 function collisionDetection() {
-    for(let c=0; c<brickColumnCount; c++) {
-        for(let r=0; r<brickRowCount; r++) {
-            let b = bricks[c][r];
-            if(b.status == 1) {
-                if(x > b.x && x < b.x+brickWidth && y > b.y && y < b.y+brickHeight) {
-                    dy = -dy;
-                    b.status = 0;
+    for (let c = 0; c < monsterHCount; c++) {
+        for (let r = 0; r < monsterVCount; r++) {
+            let m = monsters[c][r];
+            if (m.status) {
+                if (
+                    ballX > m.x &&
+                    ballX < m.x + monsterRadius &&
+                    ballY > m.y &&
+                    ballY < m.y + monsterRadius
+                ) {
+                    ballMoveY = -ballMoveY;
+                    m.status = false;
                     score++;
-                    if(score == brickRowCount*brickColumnCount) {
-                        alert("YOU WIN, CONGRATULATIONS!");
-                        document.location.reload();
-                    }
                 }
             }
         }
@@ -102,27 +105,31 @@ function collisionDetection() {
 }
 
 function drawScore() {
-    ctx.font = "16px Arial";
-    ctx.fillStyle = "#0095DD";
-    ctx.fillText("Score: " + score, 8, 20);
+    ctx.font = "24px Arial";
+    ctx.fillStyle = "#000";
+    ctx.fillText("Score: " + score, canvas.width / 2 - 40, canvas.height / 2);
 }
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawPlatform();
     drawBall();
-    drawBricks();
-    drawPaddle();
+    drawMonsters();
     collisionDetection();
     drawScore();
 
-    if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) {
-        dx = -dx;
+    if (ballX > canvas.width - ballRadius || ballX < 0) {
+        ballMoveX = -ballMoveX;
     }
-    if (y + dy < ballRadius) {
-        dy = -dy;
-    } else if (y + dy > canvas.height - ballRadius) {
-        if (x > paddleX && x < paddleX + paddleWidth) {
-            dy = -dy;
+
+    if (ballY < 0) {
+        ballMoveY = -ballMoveY;
+    } else if (ballY > canvas.height - ballRadius) {
+        if (
+            ballX > platformX - platformWidth / 2 &&
+            ballX < platformX + platformWidth / 2
+        ) {
+            ballMoveY = -ballMoveY;
         } else {
             alert("GAME OVER");
             document.location.reload();
@@ -130,14 +137,20 @@ function draw() {
         }
     }
 
-    if (rightPressed && paddleX < canvas.width - paddleWidth) {
-        paddleX += 7;
-    } else if (leftPressed && paddleX > 0) {
-        paddleX -= 7;
+    if (score == monsterHCount * monsterVCount) {
+        alert("YOU WIN");
+        document.location.reload();
+        clearInterval(interval);
     }
 
-    x += dx;
-    y += dy;
+    ballX += ballMoveX;
+    ballY += ballMoveY;
+
+    if (rightMove && platformX < canvas.width - platformWidth) {
+        platformX += platformSpeed;
+    } else if (leftMove && platformX > 0) {
+        platformX -= platformSpeed;
+    }
 }
 
 let interval = setInterval(draw, 10);

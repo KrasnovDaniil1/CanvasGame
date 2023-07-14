@@ -5,20 +5,27 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Document</title>
-        <style>
-            * {
-                padding: 0;
-                margin: 0;
-            }
-            canvas {
-                background: #eee;
-                display: block;
-                margin: 0 auto;
-            }
-        </style>
     </head>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+        body {
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+        }
+        canvas {
+            width: 50vw;
+            height: 100vh;
+            background: #c0c2ce;
+        }
+    </style>
     <body>
-        <canvas id="myCanvas" width="480" height="320"></canvas>
+        <canvas id="myCanvas" width="800" height="800"></canvas>
         <script src="./main.js"></script>
     </body>
 </html>
